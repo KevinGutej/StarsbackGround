@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stars background</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            background: #000;
+            position: relative;
+        }
+
+        #starCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        header {
+            padding: 20px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        header h1 {
+            font-size: 2.5em;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 40px;
+        }
+
+        .item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            text-align: center;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .item img {
+            max-width: 100%;
+            border-radius: 10px;
+        }
+
+        .item h3 {
+            margin: 15px 0;
+        }
+
+        .item p {
+            margin: 10px 0;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            background: #ff7eb3;
+            color: white;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #ff5a95;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="starCanvas"></canvas>
+    <header>
+        <h1>Stars background</h1>
+    </header>
+    <div class="grid-container">
+        <div class="item">
+            <img src="https://via.placeholder.com/250" alt="Product A">
+            <h3>Product A</h3>
+            <p>$20.00</p>
+            <button class="btn">Add to Cart</button>
+        </div>
+        <div class="item">
+            <img src="https://via.placeholder.com/250" alt="Product B">
+            <h3>Product B</h3>
+            <p>$30.00</p>
+            <button class="btn">Add to Cart</button>
+        </div>
+        <div class="item">
+            <img src="https://via.placeholder.com/250" alt="Product C">
+            <h3>Product C</h3>
+            <p>$40.00</p>
+            <button class="btn">Add to Cart</button>
+        </div>
+        <div class="item">
+            <img src="https://via.placeholder.com/250" alt="Product D">
+            <h3>Product D</h3>
+            <p>$50.00</p>
+            <button class="btn">Add to Cart</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("starCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let stars = [];
+        const maxStars = 50;
+        const starDuration = 2000;
+        const fadeSpeed = 0.02;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+
+        function Star() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.size = Math.random() * 2 + 1;
+            this.opacity = Math.random();
+            this.fadeIn = Math.random() > 0.5;
+        }
+        function initializeStars() {
+            stars = [];
+            for (let i = 0; i < maxStars; i++) {
+                stars.push(new Star());
+            }
+        }
+        function updateStars() {
+            stars.forEach(star => {
+                if (star.fadeIn) {
+                    star.opacity += fadeSpeed;
+                    if (star.opacity >= 1) {
+                        star.opacity = 1;
+                        star.fadeIn = false;
+                    }
+                } else {
+                    star.opacity -= fadeSpeed;
+                    if (star.opacity <= 0) {
+                        star.opacity = 0;
+                        star.fadeIn = true;
+                        star.x = Math.random() * canvas.width;
+                        star.y = Math.random() * canvas.height;
+                    }
+                }
+            });
+        }
+        function drawStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            stars.forEach(star => {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, 2 * Math.PI);
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                ctx.fill();
+            });
+        }
+        function animate() {
+            updateStars();
+            drawStars();
+            requestAnimationFrame(animate);
+        }
+        initializeStars();
+        animate();
+    </script>
+
+</body>
+
+</html>
