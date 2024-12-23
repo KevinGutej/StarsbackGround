@@ -43,29 +43,30 @@
             z-index: 2;
         }
 
-        .shelf {
+        .balance {
             position: absolute;
-            bottom: 20px;
-            display: flex;
-            justify-content: space-evenly;
-            width: 100%;
-            color: #fff;
+            top: 80px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px 20px;
             font-size: 1.5em;
-            font-weight: bold;
-            text-align: center;
+            border-radius: 10px;
+            z-index: 2;
         }
     </style>
 </head>
 
 <body>
     <header>Stars background</header>
+    <div class="balance" id="balanceDisplay">Balance: $100</div>
     <canvas id="starsCanvas"></canvas>
     <canvas id="plinkoCanvas"></canvas>
-    <div class="shelf" id="shelfContainer"></div>
 
     <script>
         const starsCanvas = document.getElementById("starsCanvas");
         const plinkoCanvas = document.getElementById("plinkoCanvas");
+        const balanceDisplay = document.getElementById("balanceDisplay");
+
         const starsCtx = starsCanvas.getContext("2d");
         const ctx = plinkoCanvas.getContext("2d");
 
@@ -75,11 +76,14 @@
         const SPACING_X = 50;
         const SPACING_Y = 50;
         const GRAVITY = 0.1;
+        const BALL_COST = 5;
 
         let stars = [];
         let shootingStars = [];
         let pegs = [];
         let balls = [];
+        let multipliers = [];
+        let balance = 100;
 
         function resizeCanvas() {
             starsCanvas.width = window.innerWidth;
@@ -177,6 +181,20 @@
             }
         }
 
+        function createMultipliers() {
+            const offsetY = 100 + ROWS * SPACING_Y;
+            const centerX = plinkoCanvas.width / 2;
+            const cols = ROWS + 1;
+            const spacingX = SPACING_X;
+            const xOffset = centerX - (cols - 1) * spacingX / 2;
+
+            for (let col = 0; col < cols; col++) {
+                const x = xOffset + col * spacingX;
+                const multiplier = Math.random() * 3 + 1;
+                multipliers.push({ x, y: offsetY, value: multiplier.toFixed(1) });
+            }
+        }
+
         function Ball(x, y) {
             this.x = x;
             this.y = y;
@@ -186,7 +204,15 @@
         }
 
         function addBall() {
-            balls.push(new Ball(plinkoCanvas.width / 2, 50));
+            if (balance >= BALL_COST) {
+                balls.push(new Ball(plinkoCanvas.width / 2, 50));
+                balance -= BALL_COST;
+                updateBalanceDisplay();
+            }
+        }
+
+        function updateBalanceDisplay() {
+            balanceDisplay.textContent = `Balance: $${balance.toFixed(2)}`;
         }
 
         function updateBalls() {
@@ -205,7 +231,18 @@
                     const distance = Math.sqrt(dx * dx + dy * dy);
 
                     if (distance < PEG_RADIUS + BALL_RADIUS) {
-                        ball.vy *= -0.7;
+                        const angle = Math.atan2(dy, dx);
+                        ball.vx += Math.cos(angle) * 0.5;
+                        ball.vy += Math.sin(angle) * 0.5;
+                    }
+                });
+
+                multipliers.forEach(multiplier => {
+                    const dx = ball.x - multiplier.x;
+                    const dy = ball.y - multiplier.y;
+                    if (Math.abs(dx) < SPACING_X / 2 && dy > 0 && dy < BALL_RADIUS) {
+                        balance += BALL_COST * multiplier.value;
+                        updateBalanceDisplay();
                     }
                 });
             });
@@ -219,6 +256,17 @@
                 ctx.beginPath();
                 ctx.arc(peg.x, peg.y, PEG_RADIUS, 0, Math.PI * 2);
                 ctx.fill();
+            });
+        }
+
+        function drawMultipliers() {
+            ctx.fillStyle = "yellow";
+            multipliers.forEach(multiplier => {
+                ctx.fillText(
+                    `x${multiplier.value}`,
+                    multiplier.x - 10,
+                    multiplier.y + 15
+                );
             });
         }
 
@@ -237,6 +285,7 @@
 
             ctx.clearRect(0, 0, plinkoCanvas.width, plinkoCanvas.height);
             drawPegs();
+            drawMultipliers();
             updateBalls();
             drawBalls();
 
@@ -246,8 +295,14 @@
         initializeStars();
         createShootingStar();
         createPegs();
-        setInterval(addBall, 1000);
+        createMultipliers();
         animate();
+
+        document.addEventListener("keydown", event => {
+            if (event.code === "Space") {
+                addBall();
+            }
+        });
     </script>
 </body>
 
