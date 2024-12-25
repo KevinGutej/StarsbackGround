@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stars background</title>
+    <title>Stars Background</title>
     <style>
         * {
             margin: 0;
@@ -57,7 +57,7 @@
 </head>
 
 <body>
-    <header>Stars background</header>
+    <header>Stars Background</header>
     <div class="balance" id="balanceDisplay">Balance: $100</div>
     <canvas id="starsCanvas"></canvas>
     <canvas id="plinkoCanvas"></canvas>
@@ -168,6 +168,7 @@
             const offsetY = 100;
             const centerX = plinkoCanvas.width / 2;
 
+            pegs = [];
             for (let row = 0; row < ROWS; row++) {
                 const cols = row + 1;
                 const spacingX = SPACING_X;
@@ -179,11 +180,15 @@
                     pegs.push({ x, y });
                 }
             }
+
+            pegs.shift();
         }
 
         function createMultipliers() {
             const offsetY = 100 + ROWS * SPACING_Y;
             const centerX = plinkoCanvas.width / 2;
+
+            multipliers = [];
             const cols = ROWS + 1;
             const spacingX = SPACING_X;
             const xOffset = centerX - (cols - 1) * spacingX / 2;
@@ -221,7 +226,10 @@
                 ball.x += ball.vx;
                 ball.y += ball.vy;
 
-                if (ball.x - BALL_RADIUS < 0 || ball.x + BALL_RADIUS > plinkoCanvas.width) {
+                const minX = plinkoCanvas.width / 2 - (ROWS + 1) * SPACING_X / 2;
+                const maxX = plinkoCanvas.width / 2 + (ROWS + 1) * SPACING_X / 2;
+
+                if (ball.x - BALL_RADIUS < minX || ball.x + BALL_RADIUS > maxX) {
                     ball.vx *= -1;
                 }
 
