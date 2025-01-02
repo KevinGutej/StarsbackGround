@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plinko with Stars Background</title>
+    <title>Plinko Game</title>
     <style>
         * {
             margin: 0;
@@ -87,7 +87,7 @@
 
         const PEG_RADIUS = 5;
         const BALL_RADIUS = 8;
-        const ROWS = 10;
+        const ROWS = 15;
         const SPACING_X = 50;
         const SPACING_Y = 50;
         const GRAVITY = 0.1;
@@ -166,22 +166,11 @@
             const cols = ROWS + 1;
             const spacingX = SPACING_X;
             const xOffset = centerX - (cols - 1) * spacingX / 2;
-
-            const values = [0.1, 0.1, 0.2, 0.5, 1, 1.5, 2, 3];
-            const weights = [0.4, 0.3, 0.1, 0.05, 0.05, 0.05, 0.03, 0.02];
+            const values = [6, 5, 4, 3, 2, 1, 0.75, 0.5, 0, 0.5, 0.75, 1, 2, 3, 4, 5, 6,];
 
             for (let col = 0; col < cols; col++) {
                 const x = xOffset + col * spacingX;
-                let random = Math.random();
-                let sum = 0;
-                let value = values[0];
-                for (let i = 0; i < values.length; i++) {
-                    sum += weights[i];
-                    if (random <= sum) {
-                        value = values[i];
-                        break;
-                    }
-                }
+                const value = values[col];
 
                 multipliers.push({ x, y: offsetY, value });
             }
