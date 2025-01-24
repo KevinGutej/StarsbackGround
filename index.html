@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plinko Game</title>
+    <title>Advanced Plinko Game</title>
     <style>
         * {
             margin: 0;
@@ -14,11 +14,11 @@
 
         body {
             font-family: Arial, sans-serif;
-            color: #fff;
             overflow: hidden;
             height: 100vh;
-            background: linear-gradient(to bottom, #020024, #090979, #00d4ff);
+            background: radial-gradient(circle, #020024, #090979, #00d4ff);
             position: relative;
+            color: #fff;
         }
 
         canvas {
@@ -36,42 +36,60 @@
             width: 100%;
             text-align: center;
             padding: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            color: #fff;
+            background: rgba(0, 0, 0, 0.8);
             font-size: 2em;
-            border-bottom: 2px solid #ff7eb3;
+            color: #ffeb3b;
+            text-shadow: 0 0 10px #ffeb3b, 0 0 20px #ffeb3b;
             z-index: 2;
         }
 
-        .balance {
+        .ui {
             position: absolute;
             top: 80px;
             left: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 10px 20px;
-            font-size: 1.5em;
-            border-radius: 10px;
             z-index: 2;
         }
 
-        .ball-cost {
-            position: absolute;
-            top: 140px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.6);
+        .ui>div {
+            margin-bottom: 15px;
             padding: 10px 20px;
-            font-size: 1.2em;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #ffeb3b;
             border-radius: 10px;
-            z-index: 2;
+            text-shadow: 0 0 5px #ffeb3b;
+            font-size: 1.2em;
+        }
+
+        #playButton {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(45deg, #4caf50, #81c784);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.5em;
+            text-shadow: 0 0 5px #fff;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        #playButton:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px #4caf50;
         }
     </style>
 </head>
 
 <body>
-    <header>Plinko Game</header>
-    <div class="balance" id="balanceDisplay">Balance: $100</div>
-    <div class="ball-cost">
-        Ball Cost: $<input type="number" id="ballCostInput" value="5" min="1" style="width: 60px;">
+    <header>Advanced Plinko Game</header>
+    <div class="ui">
+        <div id="balanceDisplay">Balance: $100</div>
+        <div>
+            Ball Cost: $<input type="number" id="ballCostInput" value="5" min="1" style="width: 60px;">
+        </div>
+        <div>
+            <button id="playButton">Drop Ball</button>
+        </div>
     </div>
     <canvas id="starsCanvas"></canvas>
     <canvas id="plinkoCanvas"></canvas>
@@ -81,11 +99,12 @@
         const plinkoCanvas = document.getElementById("plinkoCanvas");
         const balanceDisplay = document.getElementById("balanceDisplay");
         const ballCostInput = document.getElementById("ballCostInput");
+        const playButton = document.getElementById("playButton");
 
         const starsCtx = starsCanvas.getContext("2d");
         const ctx = plinkoCanvas.getContext("2d");
 
-        const PEG_RADIUS = 5;
+        const PEG_RADIUS = 6;
         const BALL_RADIUS = 8;
         const ROWS = 15;
         const SPACING_X = 50;
@@ -108,7 +127,7 @@
         resizeCanvas();
 
         function initializeStars() {
-            for (let i = 0; i < 150; i++) {
+            for (let i = 0; i < 200; i++) {
                 stars.push(new Star());
             }
         }
@@ -131,7 +150,6 @@
 
         function drawStars() {
             starsCtx.clearRect(0, 0, starsCanvas.width, starsCanvas.height);
-
             stars.forEach(star => {
                 starsCtx.beginPath();
                 starsCtx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
@@ -166,12 +184,11 @@
             const cols = ROWS + 1;
             const spacingX = SPACING_X;
             const xOffset = centerX - (cols - 1) * spacingX / 2;
-            const values = [6, 5, 4, 3, 2, 1, 0.75, 0.5, 0, 0.5, 0.75, 1, 2, 3, 4, 5, 6,];
+            const values = [6, 5, 4, 3, 2, 1, 0.75, 0.5, 0, 0.5, 0.75, 1, 2, 3, 4, 5, 6];
 
             for (let col = 0; col < cols; col++) {
                 const x = xOffset + col * spacingX;
                 const value = values[col];
-
                 multipliers.push({ x, y: offsetY, value });
             }
         }
@@ -183,6 +200,7 @@
             this.vy = 0;
             this.cost = cost;
             this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            this.trail = [];
         }
 
         function addBall() {
@@ -203,13 +221,11 @@
                 ball.vy += GRAVITY;
                 ball.x += ball.vx;
                 ball.y += ball.vy;
-                ball.vx += (plinkoCanvas.width / 2 - ball.x) * 0.001;
 
                 pegs.forEach(peg => {
                     const dx = ball.x - peg.x;
                     const dy = ball.y - peg.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
-
                     if (distance < PEG_RADIUS + BALL_RADIUS) {
                         const angle = Math.atan2(dy, dx);
                         ball.vx += Math.cos(angle) * 0.5;
@@ -228,17 +244,19 @@
                     }
                 });
             });
-
             balls = balls.filter(ball => ball.y < plinkoCanvas.height + BALL_RADIUS);
         }
 
         function drawPegs() {
             ctx.fillStyle = "white";
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "white";
             pegs.forEach(peg => {
                 ctx.beginPath();
                 ctx.arc(peg.x, peg.y, PEG_RADIUS, 0, Math.PI * 2);
                 ctx.fill();
             });
+            ctx.shadowBlur = 0;
         }
 
         function drawMultipliers() {
@@ -246,11 +264,7 @@
             ctx.font = "16px Arial";
             ctx.textAlign = "center";
             multipliers.forEach(multiplier => {
-                ctx.fillText(
-                    `x${multiplier.value}`,
-                    multiplier.x,
-                    multiplier.y + 15
-                );
+                ctx.fillText(`x${multiplier.value}`, multiplier.x, multiplier.y + 15);
             });
         }
 
@@ -286,6 +300,8 @@
                 addBall();
             }
         });
+
+        playButton.addEventListener("click", addBall);
     </script>
 </body>
 
